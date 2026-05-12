@@ -16,11 +16,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push backend to HF Space
+      - name: Upload backend to HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config user.email "ashutosh.bharti@auricai.in"
-          git config user.name "Ashutosh Bharti"
-          git subtree push --prefix backend \
-            https://Ashu212:${HF_TOKEN}@huggingface.co/spaces/Ashu212/inference-engine main
+          pip install -q huggingface_hub
+          python3 -c "
+          import os
+          from huggingface_hub import HfApi
+
+          token = os.environ['HF_TOKEN']
+          api = HfApi(token=token)
+
+          # Verify token first
+          try:
+              user = api.whoami()
+              print(f'Authenticated as: {user[\"name\"]}')
+          except Exception as e:
+              print(f'Token invalid: {e}')
+              raise
+
+          print('Uploading backend/ to Ashu212/inference-engine ...')
+          api.upload_folder(
+              folder_path='backend',
+              repo_id='Ashu212/inference-engine',
+              repo_type='space',
+              commit_message='Deploy from GitHub Actions',
+              ignore_patterns=['__pycache__', '*.pyc', '.venv', 'venv', '.env', '*.db']
+          )
+          print('Upload complete.')
+          "
