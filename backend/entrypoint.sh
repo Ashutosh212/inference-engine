@@ -7,23 +7,16 @@ export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export PYTHONFAULTHANDLER=1
 
-# Download model from HF Hub on first boot; cached on /data after that
+# Download yolov8s-obb.pt from Ultralytics GitHub on first boot; cached in /data after that
 MODEL_PATH="${MODEL_PATH:-/data/model/yolov8s-obb.pt}"
 mkdir -p "$(dirname "$MODEL_PATH")"
 
 if [ ! -f "$MODEL_PATH" ]; then
-    echo "Model not found at $MODEL_PATH — downloading from HF Hub..."
-    python3 -c "
-from huggingface_hub import hf_hub_download
-import shutil, os
-path = hf_hub_download(
-    repo_id=os.environ['HF_MODEL_REPO'],
-    filename='yolov8s-obb.pt',
-    token=os.environ.get('HF_TOKEN')
-)
-shutil.copy(path, os.environ['MODEL_PATH'])
-print('Model saved to ' + os.environ['MODEL_PATH'])
-"
+    echo "Downloading yolov8s-obb.pt from Ultralytics GitHub releases..."
+    wget -q --show-progress -L \
+        -O "$MODEL_PATH" \
+        "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-obb.pt"
+    echo "Model saved to $MODEL_PATH"
 else
     echo "Model already cached at $MODEL_PATH — skipping download"
 fi
